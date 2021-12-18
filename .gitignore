@@ -1,0 +1,5 @@
+sitemap.xml
+.idea/**
+venv/**
+stats_**.csv
+statsbot/__pycache__/**
