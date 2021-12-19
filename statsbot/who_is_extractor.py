@@ -3,7 +3,7 @@ import requests
 import logging
 from random import shuffle
 
-from statsbot.csv_constants import CSVConstants
+from statsbot.constants import Constants
 from statsbot.extractor import Extractor, logger
 
 logger = logging.getLogger("app.whois")
@@ -37,11 +37,11 @@ class WhoIsExtractor(Extractor):
 
     def get_stats(self, user):
         updated_user = {}
-        if not user.get(CSVConstants.SITE_TAG):
+        if not user.get(Constants.SITE_TAG):
             return updated_user
-        if user.get(CSVConstants.SITE_YEAR_TAG):
+        if user.get(Constants.SITE_YEAR_TAG):
             return updated_user
-        updated_user[CSVConstants.SITE_YEAR_TAG] = self.get_creation_year(user[CSVConstants.SITE_TAG])
+        updated_user[Constants.SITE_YEAR_TAG] = self.get_creation_year(user[Constants.SITE_TAG])
         return updated_user
 
     def get_creation_year(self, url):

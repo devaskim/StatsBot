@@ -1,4 +1,4 @@
-class CSVConstants:
+class Constants:
     SITE_TAG = "site"
     SITE_YEAR_TAG = "site_year"
 
@@ -8,5 +8,8 @@ class CSVConstants:
     INSTAGRAM_POST_COUNT = "insta_post_count"
     INSTAGRAM_POST_LAST_MONTH_COUNT = "insta_last_month_post_count"
     INSTAGRAM_POST_LAST_DATE = "insta_last_post_date"
+
+    CONFIG_INSTAGRAM_USERNAME = "insta_username"
+    CONFIG_INSTAGRAM_PASSWORD = "insta_password"
 
 

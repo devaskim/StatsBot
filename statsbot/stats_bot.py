@@ -3,7 +3,7 @@ import logging
 
 from statsbot.who_is_extractor import WhoIsExtractor
 from statsbot.instagram_extractor import InstagramExtractor
-from statsbot.csv_constants import CSVConstants
+from statsbot.constants import Constants
 
 
 logger = logging.getLogger("app.bot")
@@ -36,24 +36,24 @@ class StatsBot:
         reader = csv.reader(file_in)
         for row in reader:
             user = {
-                CSVConstants.SITE_TAG: row[0],
-                CSVConstants.SITE_YEAR_TAG: row[1],
-                CSVConstants.INSTAGRAM_PAGE: row[2],
+                Constants.SITE_TAG: row[0],
+                Constants.SITE_YEAR_TAG: row[1],
+                Constants.INSTAGRAM_PAGE: row[2],
             }
             if len(row) > 3:
-                user[CSVConstants.INSTAGRAM_USER_ID] = row[3]
+                user[Constants.INSTAGRAM_USER_ID] = row[3]
             users.append(user)
         return users
 
     def _write_output_data(self, file_out, users):
         with open(file_out, 'w') as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=[CSVConstants.SITE_TAG,
-                                                         CSVConstants.SITE_YEAR_TAG,
-                                                         CSVConstants.INSTAGRAM_PAGE,
-                                                         CSVConstants.INSTAGRAM_USER_ID,
-                                                         CSVConstants.INSTAGRAM_POST_COUNT,
-                                                         CSVConstants.INSTAGRAM_POST_LAST_MONTH_COUNT,
-                                                         CSVConstants.INSTAGRAM_POST_LAST_DATE])
+            writer = csv.DictWriter(csv_file, fieldnames=[Constants.SITE_TAG,
+                                                          Constants.SITE_YEAR_TAG,
+                                                          Constants.INSTAGRAM_PAGE,
+                                                          Constants.INSTAGRAM_USER_ID,
+                                                          Constants.INSTAGRAM_POST_COUNT,
+                                                          Constants.INSTAGRAM_POST_LAST_MONTH_COUNT,
+                                                          Constants.INSTAGRAM_POST_LAST_DATE])
             writer.writeheader()
             for user in users:
                 writer.writerow(user)
