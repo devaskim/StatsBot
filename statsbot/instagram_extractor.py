@@ -34,11 +34,13 @@ class InstagramExtractor(Extractor):
                                      self.config[Constants.CONFIG_INSTAGRAM_PASSWORD]):
             logger.error("Failed to login to Instagram")
             return updated_user
-        if not user.get(Constants.INSTAGRAM_USER_ID):
+        user_id = user.get(Constants.INSTAGRAM_USER_ID)
+        if not user_id:
             user_name = self._extract_username(user[Constants.INSTAGRAM_PAGE])
-            updated_user[Constants.INSTAGRAM_USER_ID] = self.instagrapi.user_id_from_username(user_name)
+            user_id = self.instagrapi.user_id_from_username(user_name)
+            updated_user[Constants.INSTAGRAM_USER_ID] = user_id
 
-        posts = self.instagrapi.user_medias(updated_user[Constants.INSTAGRAM_USER_ID])
+        posts = self.instagrapi.user_medias(user_id)
         if not posts:
             return {}
 
