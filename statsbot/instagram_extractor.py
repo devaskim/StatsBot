@@ -11,9 +11,6 @@ logger = logging.getLogger("app.insta")
 
 
 class InstagramExtractor(Extractor):
-    ACCOUNT_USERNAME = 'devaskim'
-    ACCOUNT_PASSWORD = 'Instagram.111989'
-
     def __init__(self, config):
         self.instagrapi = Client()
         self.config = config
@@ -22,7 +19,8 @@ class InstagramExtractor(Extractor):
         try:
             return self.get_post_stats(user)
         except Exception as e:
-            logger.warning("Failed to collect stats for user: " + user[Constants.INSTAGRAM_PAGE])
+            logger.warning("Failed to collect stats for Instagram user '%s'",
+                           self._extract_username(user[Constants.INSTAGRAM_PAGE]))
             logger.warning(e)
         return {}
 
@@ -48,7 +46,6 @@ class InstagramExtractor(Extractor):
         last_month_pub_count = 0
         last_post_date = posts[0].taken_at
         for post in posts:
-            # YYYY-MM-DD
             if post.taken_at.month == now.month:
                 last_month_pub_count += 1
             if post.taken_at > last_post_date:

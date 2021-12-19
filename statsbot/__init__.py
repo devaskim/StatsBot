@@ -12,7 +12,6 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1000 * 1000
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format=f"[%(asctime)s] [%(levelname)s] - %(message)s")
 logger = logging.getLogger()
-# logging.basicConfig(filename="stats_bot.log", level=logging.DEBUG, format=f"[%(asctime)s] [%(levelname)s] - %(message)s")
 
 config = {}
 with open("config.txt") as config_file:
@@ -24,7 +23,7 @@ stats_bot = StatsBot(config)
 
 @app.route("/")
 def hello_world():
-    return "<p>Greeting!</p><p>Please, use <i>/stats</i> endpoint to get statistics or force it collecting.</p>"
+    return "<h3>Greetings!</h3><p>Use <i>/stats</i> endpoint to get statistics or force it collecting.</p>"
 
 
 @app.route("/stats", methods=["GET", "POST"])

@@ -47,7 +47,7 @@ class WhoIsExtractor(Extractor):
     def get_creation_year(self, url):
         domain = self._extract_domain(url)
         if not domain:
-            logger.warning("Failed to get domain from %s'", url)
+            logger.warning("Failed to get domain from '%s'", url)
             return self.UNKNOWN_YEAR
 
         shuffle(self.CONFIG)
@@ -55,7 +55,6 @@ class WhoIsExtractor(Extractor):
         for config in self.CONFIG:
             logger.debug("Requesting %s for domain %s", config["whois"], domain)
 
-            # FIXME: maybe url must be encoded?
             response = requests.get(config["whois"] + domain, headers=self.HEADERS)
             if response.status_code != 200:
                 return self.UNKNOWN_YEAR
@@ -100,7 +99,4 @@ class WhoIsExtractor(Extractor):
         slash_pos = domain.find("/")
         if slash_pos > -1:
             domain = domain[0:slash_pos]
-
-        logger.debug("Extract domain '%s' from '%s'", domain, url)
-
         return domain

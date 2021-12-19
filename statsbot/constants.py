@@ -9,7 +9,7 @@ class Constants:
     INSTAGRAM_POST_LAST_MONTH_COUNT = "insta_last_month_post_count"
     INSTAGRAM_POST_LAST_DATE = "insta_last_post_date"
 
-    CONFIG_INSTAGRAM_USERNAME = "insta_username"
-    CONFIG_INSTAGRAM_PASSWORD = "insta_password"
+    CONFIG_INSTAGRAM_USERNAME = "instagram_username"
+    CONFIG_INSTAGRAM_PASSWORD = "instagram_password"
 
 
