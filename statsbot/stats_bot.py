@@ -1,5 +1,8 @@
 import csv
+import datetime
 import logging
+import threading
+import time
 
 from statsbot.who_is_extractor import WhoIsExtractor
 from statsbot.instagram_extractor import InstagramExtractor
@@ -14,22 +17,43 @@ class StatsBot:
     def __init__(self, config):
         self.config = config
         self.extractors = [WhoIsExtractor(), InstagramExtractor(self.config)]
+        self.updated_users = []
+        self.last_run_timestamp = None;
+        self.in_progress = False
+        self.worker = None
+        self.lock = threading.Lock()
 
     def run(self, users):
-        updated_users = []
         if not isinstance(users, list) or not users:
-            return updated_users
+            return []
+
+        with self.lock:
+            if self.in_progress:
+                logger.info("Skip request for collecting stats: already in progress")
+                return []
+            self.in_progress = True
+
+        self.worker = threading.Thread(target=self._run, args=(users,), daemon=True)
+        self.worker.start()
+
+    def _run(self, users):
+        logger.info("Going to collect stats...")
+        updated_users = []
         for user in users:
             for extractor in self.extractors:
                 user = {**user, **extractor.get_stats(user)}
             updated_users.append(user)
-        return updated_users
+        with self.lock:
+            self.updated_users = updated_users
+            self.in_progress = False
+            self.last_run_timestamp = datetime.now()
 
-    def run_with_file(self, input_file):
-        users = self._read_input_data(input_file)
-        for extractor in self.extractors:
-            users = extractor.get_stats(users)
-        # self._write_output_data(file_out, users)
+        logger.info("Finished collecting stats")
+
+    def get_stats(self):
+        while self.lock:
+            logger.info("Returning stats, cached at %s", self.last_run_timestamp)
+            return self.updated_users
 
     def _read_input_data(self, file_in):
         users = []

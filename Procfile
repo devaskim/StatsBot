@@ -1,1 +1,1 @@
-web: gunicorn statsbot:app --timeout 600
+web: gunicorn statsbot:app --timeout 120

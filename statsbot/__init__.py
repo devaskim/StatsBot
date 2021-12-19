@@ -8,11 +8,11 @@ from flask import jsonify
 from statsbot.stats_bot import StatsBot
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1000 * 1000
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format=f'[%(asctime)s] [%(levelname)s] - %(message)s')
+logging.basicConfig(stream=sys.stdout, level=logging.INFO, format=f"[%(asctime)s] [%(levelname)s] - %(message)s")
 logger = logging.getLogger()
-# logging.basicConfig(filename='stats_bot.log', level=logging.DEBUG, format=f'[%(asctime)s] [%(levelname)s] - %(message)s')
+# logging.basicConfig(filename="stats_bot.log", level=logging.DEBUG, format=f"[%(asctime)s] [%(levelname)s] - %(message)s")
 
 config = {}
 with open("config.txt") as config_file:
@@ -24,14 +24,15 @@ stats_bot = StatsBot(config)
 
 @app.route("/")
 def hello_world():
-    logger.debug("Triggered Hello world page")
-    return "<p>Hello, World!</p>"
+    return "<p>Greeting!</p><p>Please, use <i>/stats</i> endpoint to get statistics or force it collecting.</p>"
 
 
-@app.route('/stats', methods=['POST'])
-def collect_stats():
-    data = request.get_json()
-    logger.debug("Received new stats request: %s", data)
-    stats = stats_bot.run(data)
-    logger.debug("Stats refreshed. Sending...")
-    return jsonify(stats)
+@app.route("/stats", methods=["GET", "POST"])
+def stats():
+    if request.method == "GET":
+        return jsonify(stats_bot.get_stats())
+    else:
+        data = request.get_json()
+        logger.info("Received new stats request: %d data rows", len(data))
+        stats_bot.run(data)
+        return "[]"
