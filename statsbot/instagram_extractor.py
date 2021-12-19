@@ -14,27 +14,31 @@ class InstagramExtractor(Extractor):
     ACCOUNT_USERNAME = 'devaskim'
     ACCOUNT_PASSWORD = 'Instagram.111989'
 
-    def __init__(self):
+    def __init__(self, config):
         self.instagrapi = Client()
-        self.instagrapi.login(self.ACCOUNT_USERNAME, self.ACCOUNT_PASSWORD)
+        self.config = config
 
-    def get_stats(self, users):
-        for user in users:
-            try:
-                user = {**user, **self.get_post_stats(user)}
-            except Exception as e:
-                logger.warning("Failed to collect stats for user: " + user[CSVConstants.INSTAGRAM_PAGE])
-                logger.warning(e)
-        return users
+    def get_stats(self, user):
+        updated_user = {}
+        if not self.instagrapi.login(self.config["insta_username"], self.config["insta_password"]):
+            logger.error("Failed login to Instagram")
+            return updated_user
+        try:
+            return self.get_post_stats(user)
+        except Exception as e:
+            logger.warning("Failed to collect stats for user: " + user[CSVConstants.INSTAGRAM_PAGE])
+            logger.warning(e)
+        return updated_user
 
     def get_post_stats(self, user):
-        if CSVConstants.INSTAGRAM_PAGE not in user or not user[CSVConstants.INSTAGRAM_PAGE]:
-            return {}
-        if CSVConstants.INSTAGRAM_USER_ID not in user or not user[CSVConstants.INSTAGRAM_USER_ID]:
+        updated_user = {}
+        if not user.get(CSVConstants.INSTAGRAM_PAGE):
+            return updated_user
+        if not user.get(CSVConstants.INSTAGRAM_USER_ID):
             user_name = self._extract_username(user[CSVConstants.INSTAGRAM_PAGE])
-            user[CSVConstants.INSTAGRAM_USER_ID] = self.instagrapi.user_id_from_username(user_name)
+            updated_user[CSVConstants.INSTAGRAM_USER_ID] = self.instagrapi.user_id_from_username(user_name)
 
-        posts = self.instagrapi.user_medias(user[CSVConstants.INSTAGRAM_USER_ID])
+        posts = self.instagrapi.user_medias(updated_user[CSVConstants.INSTAGRAM_USER_ID])
         if not posts:
             return {}
 
@@ -47,13 +51,13 @@ class InstagramExtractor(Extractor):
                 last_month_pub_count += 1
             if post.taken_at > last_post_date:
                 last_post_date = post.taken_at
-        user[CSVConstants.INSTAGRAM_POST_COUNT] = len(posts)
-        user[CSVConstants.INSTAGRAM_POST_LAST_DATE] = str(last_post_date.year) + "-" + \
+        updated_user[CSVConstants.INSTAGRAM_POST_COUNT] = len(posts)
+        updated_user[CSVConstants.INSTAGRAM_POST_LAST_DATE] = str(last_post_date.year) + "-" + \
                                                       str(last_post_date.month) + "-" + \
                                                       str(last_post_date.day)
-        user[CSVConstants.INSTAGRAM_POST_LAST_MONTH_COUNT] = last_month_pub_count
+        updated_user[CSVConstants.INSTAGRAM_POST_LAST_MONTH_COUNT] = last_month_pub_count
 
-        return user
+        return updated_user
 
     def _extract_username(self, username_in_page):
         if not username_in_page:

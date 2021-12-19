@@ -35,13 +35,14 @@ class WhoIsExtractor(Extractor):
         "User-Agent": "Mozilla/5.0 (Macintosh Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (Kresponse.text, like Gecko) "
                       "Version/11.1.2 Safari/605.1.15"}
 
-    def get_stats(self, users):
-        for user in users:
-            if not user[CSVConstants.SITE_TAG] or user[CSVConstants.SITE_YEAR_TAG]:
-                continue
-            user[CSVConstants.SITE_YEAR_TAG] = self.get_creation_year(user[CSVConstants.SITE_TAG])
-
-        return users
+    def get_stats(self, user):
+        updated_user = {}
+        if not user.get(CSVConstants.SITE_TAG):
+            return updated_user
+        if user.get(CSVConstants.SITE_YEAR_TAG):
+            return updated_user
+        updated_user[CSVConstants.SITE_YEAR_TAG] = self.get_creation_year(user[CSVConstants.SITE_TAG])
+        return updated_user
 
     def get_creation_year(self, url):
         domain = self._extract_domain(url)

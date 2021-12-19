@@ -1,0 +1,2 @@
+INSTA_USERNAME=devaskim
+INSTA_PASSWORD=Instagram.111989
