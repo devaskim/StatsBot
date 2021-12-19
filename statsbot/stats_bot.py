@@ -1,8 +1,7 @@
 import csv
-import datetime
+from datetime import datetime
 import logging
 import threading
-import time
 
 from statsbot.who_is_extractor import WhoIsExtractor
 from statsbot.instagram_extractor import InstagramExtractor
@@ -47,7 +46,6 @@ class StatsBot:
             self.updated_users = updated_users
             self.in_progress = False
             self.last_run_timestamp = datetime.now()
-
         logger.info("Finished collecting stats")
 
     def get_stats(self):
