@@ -1,5 +1,6 @@
 config.txt
 .idea/**
 venv/**
+logs/**
 stats_**.csv
 statsbot/__pycache__/**

@@ -1,5 +1,6 @@
 import logging
 import sys
+import os
 
 from flask import Flask
 from flask import request
@@ -10,12 +11,19 @@ from statsbot.stats_bot import StatsBot
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1000 * 1000
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format=f"[%(asctime)s] [%(levelname)s] - %(message)s")
+LOGS_DIRECTORY = "logs"
+LOG_FILE = "app.log"
+CONFIG_FILE = "config.txt"
+
+if not os.path.exists(LOGS_DIRECTORY):    
+    os.makedirs(LOGS_DIRECTORY)
+
+logging.basicConfig(filename=os.path.join(LOGS_DIRECTORY, LOG_FILE), level=logging.INFO, format=f"[%(asctime)s] [%(levelname)s] - %(message)s")
 logger = logging.getLogger()
 
 config = {}
-with open("config.txt") as config_file:
-    for line in config_file:
+with open(CONFIG_FILE) as file:
+    for line in file:
         name, value = line.partition("=")[::2]
         config[name.strip().lower()] = value.strip()
 stats_bot = StatsBot(config)
