@@ -4,9 +4,7 @@ import logging
 from random import shuffle
 
 from statsbot.constants import Constants
-from statsbot.extractor import Extractor, logger
-
-logger = logging.getLogger("app.whois")
+from statsbot.extractor import Extractor
 
 
 class WhoIsExtractor(Extractor):
@@ -35,29 +33,36 @@ class WhoIsExtractor(Extractor):
         "User-Agent": "Mozilla/5.0 (Macintosh Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (Kresponse.text, like Gecko) "
                       "Version/11.1.2 Safari/605.1.15"}
 
+    def __init__(self):
+        self.logger = logging.getLogger(Constants.LOGGER_NAME)
+
     def get_stats(self, user):
         updated_user = {}
         if not user.get(Constants.SITE_TAG):
             return updated_user
-        if user.get(Constants.SITE_YEAR_TAG):
+        if user.get(Constants.SITE_YEAR_TAG) and int(user[Constants.SITE_YEAR_TAG]) != WhoIsExtractor.UNKNOWN_YEAR:
             return updated_user
-        updated_user[Constants.SITE_YEAR_TAG] = self.get_creation_year(user[Constants.SITE_TAG])
+        domain = self._extract_domain(user[Constants.SITE_TAG])
+        year = self.get_creation_year(domain)
+        if year == WhoIsExtractor.UNKNOWN_YEAR:
+            subdomain_pos = domain.find(".")
+            if subdomain_pos > 0 and domain.find(".", subdomain_pos + 1) > 0:
+                domain = domain[subdomain_pos + 1:]
+                self.logger.debug("Subdomain creation year unknown. Going to resolve it for domain %s", domain)
+                year = self.get_creation_year(domain)
+        updated_user[Constants.SITE_YEAR_TAG] = year
         return updated_user
 
-    def get_creation_year(self, url):
-        domain = self._extract_domain(url)
-        if not domain:
-            logger.warning("Failed to get domain from '%s'", url)
-            return self.UNKNOWN_YEAR
-
+    def get_creation_year(self, domain):
         shuffle(self.CONFIG)
 
         for config in self.CONFIG:
-            logger.debug("Requesting %s for domain %s", config["whois"], domain)
+            self.logger.debug("Requesting %s for domain %s", config["whois"], domain)
 
             response = requests.get(config["whois"] + domain, headers=self.HEADERS)
             if response.status_code != 200:
-                return self.UNKNOWN_YEAR
+                self.logger.debug("Got %d HTTP status code from %s for %s", response.status_code, config["whois"], domain)
+                continue
 
             raw_data_position = 0
             for search_tag in config["tags"]:
@@ -66,7 +71,7 @@ class WhoIsExtractor(Extractor):
                     break
 
             if raw_data_position <= 0:
-                logger.warning("Maybe captcha. Cannot find any search tag in %s for %s", config["whois"], domain)
+                self.logger.debug("Maybe captcha. Cannot find any search tag in %s for %s", config["whois"], domain)
                 continue
 
             search_tag_position = response.text.find(self.CREATION_DATE_SEARCH_TAG, raw_data_position)
@@ -76,12 +81,13 @@ class WhoIsExtractor(Extractor):
                     match = re.search(self.YEAR_REGEXP, test_string)
                     if match:
                         year = int(match[1])
-                        logger.debug("Resolve %d year for %s domain", year, domain)
+                        self.logger.debug("Resolve %d year for %s domain", year, domain)
                         return year
 
                 search_tag_position = response.text.find(self.CREATION_DATE_SEARCH_TAG,
                                                          search_tag_position + len(self.CREATION_DATE_SEARCH_TAG))
 
+            self.logger.warning("No configured WhoIs provider resolved creation year for %s domain", domain)
             return self.UNKNOWN_YEAR
 
     def _extract_domain(self, url):

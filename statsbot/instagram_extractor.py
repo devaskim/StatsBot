@@ -1,38 +1,38 @@
 import logging
+import time
 from datetime import datetime
 
 from statsbot.constants import Constants
-from statsbot.extractor import Extractor, logger
+from statsbot.extractor import Extractor
 
 from instagrapi import Client
 
 
-logger = logging.getLogger("app.insta")
-
-
 class InstagramExtractor(Extractor):
     def __init__(self, config):
+        self.logger = logging.getLogger(Constants.LOGGER_NAME)
         self.instagrapi = Client()
         self.config = config
 
     def get_stats(self, user):
         try:
+            time.sleep(int(self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT]))
             return self.get_post_stats(user)
         except Exception as e:
-            logger.warning("Failed to collect stats for Instagram user '%s'",
-                           self._extract_username(user[Constants.INSTAGRAM_PAGE]))
-            logger.warning(e)
+            self.logger.warning("Failed to collect stats for Instagram user '%s'",
+                                    self._extract_username(user[Constants.INSTAGRAM_PAGE]))
+            self.logger.warning(e)
         return {}
 
     def get_post_stats(self, user):
         updated_user = {}
-        if not user.get(Constants.INSTAGRAM_PAGE):
+        if not user.get(Constants.INSTAGRAM_PAGE, "") or not user.get(Constants.INSTAGRAM_USER_ID, ""):
             return updated_user
         if not self.instagrapi.login(self.config[Constants.CONFIG_INSTAGRAM_USERNAME],
                                      self.config[Constants.CONFIG_INSTAGRAM_PASSWORD]):
-            logger.error("Failed to login to Instagram")
+            self.logger.error("Failed to login to Instagram")
             return updated_user
-        user_id = user.get(Constants.INSTAGRAM_USER_ID)
+        user_id = user.get(Constants.INSTAGRAM_USER_ID, "")
         if not user_id:
             user_name = self._extract_username(user[Constants.INSTAGRAM_PAGE])
             user_id = self.instagrapi.user_id_from_username(user_name)

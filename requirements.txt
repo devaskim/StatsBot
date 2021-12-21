@@ -1,5 +1,6 @@
 instagrapi
 Pillow>=8.1.1
 requests
-flask
-gunicorn
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
