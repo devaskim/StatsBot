@@ -47,13 +47,13 @@ class InstagramExtractor(Extractor):
             self.logger.error("Failed to login to Instagram")
             return updated_user
         user_name = self._extract_username(user[Constants.INSTAGRAM_PAGE])
-        user_id = int(user.get(Constants.INSTAGRAM_USER_ID, InstagramExtractor.UNKNOWN_USER_ID))
-        if user_id == InstagramExtractor.UNKNOWN_USER_ID:
-            user_id = int(self.instagrapi.user_id_from_username(user_name))
+        user_id = user.get(Constants.INSTAGRAM_USER_ID, "")
+        if not user_id:
+            user_id = self.instagrapi.user_id_from_username(user_name)
             updated_user[Constants.INSTAGRAM_USER_ID] = user_id
-            self.logger.debug("Instagram ID for user '%s' is resolved to %d", user_name, user_id)
+            self.logger.debug("Instagram ID for user '%s' is resolved to %s", user_name, user_id)
         else:
-            self.logger.debug("Instagram ID for user '%s' is already known: %d", user_name, user_id)
+            self.logger.debug("Instagram ID for user '%s' is already known: %s", user_name, user_id)
 
         posts = self.instagrapi.user_medias(user_id)
         if not posts:
