@@ -88,6 +88,12 @@ def main():
                     user[Constants.INSTAGRAM_PAGE] = row[2]
                 if columns_number >= 4:
                     user[Constants.INSTAGRAM_USER_ID] = row[3]
+                if columns_number >= 5:
+                    user[Constants.INSTAGRAM_POST_COUNT] = row[4]
+                if columns_number >= 6:
+                    user[Constants.INSTAGRAM_POST_LAST_MONTH_COUNT] = row[5]
+                if columns_number >= 7:
+                    user[Constants.INSTAGRAM_POST_LAST_DATE] = row[6]
                 users.append(user)
 
         logger.info("%d user(s) will be processed", len(users))
@@ -96,11 +102,11 @@ def main():
         result = []
         for user in updated_users:
             result.append([user.get(Constants.SITE_TAG, ""),
-                           user.get(Constants.SITE_YEAR_TAG, -1),
+                           "" if not user.get(Constants.SITE_TAG, "") else user.get(Constants.SITE_YEAR_TAG, -1),
                            user.get(Constants.INSTAGRAM_PAGE, ""),
                            user.get(Constants.INSTAGRAM_USER_ID, ""),
-                           user.get(Constants.INSTAGRAM_POST_COUNT, 0),
-                           user.get(Constants.INSTAGRAM_POST_LAST_MONTH_COUNT, 0),
+                           user.get(Constants.INSTAGRAM_POST_COUNT, ""),
+                           user.get(Constants.INSTAGRAM_POST_LAST_MONTH_COUNT, ""),
                            user.get(Constants.INSTAGRAM_POST_LAST_DATE, "")])
 
         sheet.values().update(spreadsheetId=app_config[Constants.CONFIG_SPREADSHEET_ID],

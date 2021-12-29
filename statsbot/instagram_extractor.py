@@ -10,6 +10,8 @@ from instagrapi import Client
 
 class InstagramExtractor(Extractor):
     UNKNOWN_USER_ID = 0
+    SINGLE_REQUEST_POST_COUNT = 10
+    SINGLE_REQUEST_MAX_POST_COUNT = 50
 
     def __init__(self, config):
         self.logger = logging.getLogger(Constants.LOGGER_NAME)
@@ -55,25 +57,56 @@ class InstagramExtractor(Extractor):
         else:
             self.logger.debug("Instagram ID for user '%s' is already known: %s", user_name, user_id)
 
-        posts = self.instagrapi.user_medias(user_id)
-        if not posts:
-            self.logger.debug("No posts for Instagram user '%s'", user_name)
-            return {}
-
         now = datetime.now()
-        last_month_pub_count = 0
-        last_post_date = posts[0].taken_at
-        self.logger.debug("Processing %d post(s) of Instagram user '%s'", len(posts), user_name)
-        for post in posts:
-            if post.taken_at.month == now.month:
-                last_month_pub_count += 1
-            if post.taken_at > last_post_date:
-                last_post_date = post.taken_at
-        updated_user[Constants.INSTAGRAM_POST_COUNT] = len(posts)
-        updated_user[Constants.INSTAGRAM_POST_LAST_DATE] = str(last_post_date.year) + "-" + \
-                                                           str(last_post_date.month) + "-" + \
-                                                           str(last_post_date.day)
-        updated_user[Constants.INSTAGRAM_POST_LAST_MONTH_COUNT] = last_month_pub_count
+
+        total_post_count = user.get(Constants.INSTAGRAM_POST_COUNT, "")
+        total_post_count = int(total_post_count) if total_post_count else 0
+        is_first_time = total_post_count == 0
+
+        last_month_post_count = user.get(Constants.INSTAGRAM_POST_LAST_MONTH_COUNT, "")
+        last_month_post_count = int(last_month_post_count) if last_month_post_count else 0
+
+        last_post_date = user.get(Constants.INSTAGRAM_POST_LAST_DATE, "")
+        if last_post_date:
+            last_post_date = datetime.strptime(last_post_date + " 00:00:00", "%Y-%m-%d %H:%M:%S")
+        else:
+            last_post_date = datetime.strptime("2000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
+
+        if now.month > last_post_date.month or now.year > last_post_date.year:
+            last_month_post_count = 0
+
+        if total_post_count == 0:
+            single_request_post_count = InstagramExtractor.SINGLE_REQUEST_MAX_POST_COUNT
+        else:
+            single_request_post_count = InstagramExtractor.SINGLE_REQUEST_POST_COUNT
+
+        end_cursor = ""
+        while True:
+            posts, end_cursor = self.instagrapi.user_medias_paginated(int(user_id),
+                                                                      single_request_post_count,
+                                                                      end_cursor)
+            if not posts:
+                if total_post_count == 0:
+                    self.logger.debug("No posts for Instagram user '%s'", user_name)
+                    last_post_date = ""
+                break
+
+            self.logger.debug("Processing %d post(s) of Instagram user '%s'", len(posts), user_name)
+            for post in posts:
+                naive_date = post.taken_at.replace(tzinfo=None)
+                if naive_date > last_post_date:
+                    last_post_date = naive_date
+                elif not is_first_time:
+                    break
+                if naive_date.month == now.month and naive_date.year == now.year:
+                    last_month_post_count += 1
+                total_post_count += 1
+            if not end_cursor:
+                break
+
+        updated_user[Constants.INSTAGRAM_POST_COUNT] = total_post_count
+        updated_user[Constants.INSTAGRAM_POST_LAST_MONTH_COUNT] = last_month_post_count
+        updated_user[Constants.INSTAGRAM_POST_LAST_DATE] = str(last_post_date)
 
         self.logger.debug("Instagram user '%s' processed: posts total %d, last month %d, last date %s",
                           user_name,
