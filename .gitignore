@@ -6,4 +6,5 @@ stats_**.csv
 statsbot/__pycache__/**
 *.egg-info/**
 dist/**
-
+token.json
+credentials.json
