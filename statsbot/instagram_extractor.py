@@ -67,9 +67,7 @@ class InstagramExtractor(Extractor):
         last_month_post_count = int(last_month_post_count) if last_month_post_count else 0
 
         last_post_date = user.get(Constants.INSTAGRAM_POST_LAST_DATE, "")
-        if last_post_date:
-            last_post_date = datetime.strptime(last_post_date + " 00:00:00", "%Y-%m-%d %H:%M:%S")
-        else:
+        if not last_post_date:
             last_post_date = datetime.strptime("2000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
 
         if now.month > last_post_date.month or now.year > last_post_date.year:
