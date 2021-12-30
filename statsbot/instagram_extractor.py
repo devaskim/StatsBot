@@ -40,10 +40,6 @@ class InstagramExtractor(Extractor):
         updated_user = {}
         if not user.get(Constants.INSTAGRAM_PAGE, ""):
             return updated_user
-        if self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT] > 0:
-            self.logger.debug("Waiting for %d seconds before processing next Instagram user",
-                              self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT])
-            time.sleep(self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT])
         if not self.instagrapi.login(self.config[Constants.CONFIG_INSTAGRAM_USERNAME],
                                      self.config[Constants.CONFIG_INSTAGRAM_PASSWORD]):
             self.logger.error("Failed to login to Instagram")
@@ -67,7 +63,7 @@ class InstagramExtractor(Extractor):
         last_month_post_count = int(last_month_post_count) if last_month_post_count else 0
 
         last_post_date = user.get(Constants.INSTAGRAM_POST_LAST_DATE, "")
-        if not last_post_date:
+        if last_post_date:
             last_post_date = datetime.strptime(last_post_date, "%Y-%m-%d %H:%M:%S")
         else:
             last_post_date = datetime.strptime("2000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
@@ -97,6 +93,7 @@ class InstagramExtractor(Extractor):
                 if naive_date > last_post_date:
                     last_post_date = naive_date
                 elif not is_first_time:
+                    end_cursor = ""
                     break
                 if naive_date.month == now.month and naive_date.year == now.year:
                     last_month_post_count += 1
@@ -113,6 +110,10 @@ class InstagramExtractor(Extractor):
                           updated_user[Constants.INSTAGRAM_POST_COUNT],
                           updated_user[Constants.INSTAGRAM_POST_LAST_MONTH_COUNT],
                           updated_user[Constants.INSTAGRAM_POST_LAST_DATE])
+        if self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT] > 0:
+            self.logger.debug("Waiting for %d seconds before processing next Instagram user",
+                              self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT])
+            time.sleep(self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT])
         return updated_user
 
     def _extract_username(self, username_in_page):
