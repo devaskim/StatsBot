@@ -80,7 +80,7 @@ def main():
                 if columns_number >= 5:
                     user[Constants.INSTAGRAM_POST_COUNT] = row[4]
                 if columns_number >= 6:
-                    user[Constants.INSTAGRAM_POST_LAST_MONTH_COUNT] = row[5]
+                    user[Constants.INSTAGRAM_POST_LAST_N_DAYS_COUNT] = row[5]
                 if columns_number >= 7:
                     user[Constants.INSTAGRAM_POST_LAST_DATE] = row[6]
                 users.append(user)
@@ -95,7 +95,7 @@ def main():
                            user.get(Constants.INSTAGRAM_PAGE, ""),
                            user.get(Constants.INSTAGRAM_USER_ID, ""),
                            user.get(Constants.INSTAGRAM_POST_COUNT, ""),
-                           user.get(Constants.INSTAGRAM_POST_LAST_MONTH_COUNT, ""),
+                           user.get(Constants.INSTAGRAM_POST_LAST_N_DAYS_COUNT, ""),
                            user.get(Constants.INSTAGRAM_POST_LAST_DATE, "")])
 
         sheet.values().update(spreadsheetId=app_config[Constants.CONFIG_SPREADSHEET_ID],

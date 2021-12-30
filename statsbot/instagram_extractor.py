@@ -1,7 +1,7 @@
 import logging
 import time
 import os.path
-from datetime import datetime
+import datetime
 
 from statsbot.constants import Constants
 from statsbot.extractor import Extractor
@@ -10,20 +10,13 @@ from instagrapi import Client
 
 
 class InstagramExtractor(Extractor):
-    UNKNOWN_USER_ID = 0
-    SINGLE_REQUEST_POST_COUNT = 10
-    SINGLE_REQUEST_MAX_POST_COUNT = 50
-
-    INSTAGRAM_SETTING_DIR = "credentials"
-    INSTAGRAM_SETTING_FILE = "instagram"
 
     def __init__(self, config):
         self.logger = logging.getLogger(Constants.LOGGER_NAME)
         self.config = config
         self.cred_file = os.path.join(Constants.CREDENTIALS_DIR,
-                                      InstagramExtractor.INSTAGRAM_SETTING_FILE + "_" +
-                                      self.config[Constants.CONFIG_INSTAGRAM_USERNAME] +
-                                      ".json")
+                                      Constants.INSTAGRAM_USER_SESSION_FILE.format(
+                                          self.config[Constants.CONFIG_INSTAGRAM_USERNAME]))
 
         error_message = ""
         try:
@@ -87,28 +80,23 @@ class InstagramExtractor(Extractor):
         else:
             self.logger.debug("Instagram ID for user '%s' is already known: %s", user_name, user_id)
 
-        now = datetime.now()
+        last_n_days = datetime.datetime.now() - datetime.timedelta(days=Constants.INSTAGRAM_LAST_N_DAYS)
 
+        last_n_days_post_count = 0
         total_post_count = user.get(Constants.INSTAGRAM_POST_COUNT, "")
         total_post_count = int(total_post_count) if total_post_count else 0
         is_first_time = total_post_count == 0
 
-        last_month_post_count = user.get(Constants.INSTAGRAM_POST_LAST_MONTH_COUNT, "")
-        last_month_post_count = int(last_month_post_count) if last_month_post_count else 0
-
         last_post_date = user.get(Constants.INSTAGRAM_POST_LAST_DATE, "")
         if last_post_date:
-            last_post_date = datetime.strptime(last_post_date, "%Y-%m-%d %H:%M:%S")
+            last_post_date = datetime.datetime.strptime(last_post_date, "%Y-%m-%d %H:%M:%S")
         else:
-            last_post_date = datetime.strptime("2000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
-
-        if now.month > last_post_date.month or now.year > last_post_date.year:
-            last_month_post_count = 0
+            last_post_date = datetime.datetime.strptime("2000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
 
         if total_post_count == 0:
-            single_request_post_count = InstagramExtractor.SINGLE_REQUEST_MAX_POST_COUNT
+            single_request_post_count = Constants.INSTAGRAM_SINGLE_REQUEST_MAX_POST_COUNT
         else:
-            single_request_post_count = InstagramExtractor.SINGLE_REQUEST_POST_COUNT
+            single_request_post_count = Constants.INSTAGRAM_SINGLE_REQUEST_POST_COUNT
 
         end_cursor = ""
         while True:
@@ -123,26 +111,27 @@ class InstagramExtractor(Extractor):
 
             self.logger.debug("Processing %d post(s) of Instagram user '%s'", len(posts), user_name)
             for post in posts:
-                naive_date = post.taken_at.replace(tzinfo=None)
-                if naive_date > last_post_date:
-                    last_post_date = naive_date
+                post_naive_date = post.taken_at.replace(tzinfo=None)
+                if post_naive_date > last_post_date:
+                    last_post_date = post_naive_date
                 elif not is_first_time:
                     end_cursor = ""
                     break
-                if naive_date.month == now.month and naive_date.year == now.year:
-                    last_month_post_count += 1
+                if post_naive_date >= last_n_days:
+                    last_n_days_post_count += 1
                 total_post_count += 1
             if not end_cursor:
                 break
 
         updated_user[Constants.INSTAGRAM_POST_COUNT] = total_post_count
-        updated_user[Constants.INSTAGRAM_POST_LAST_MONTH_COUNT] = last_month_post_count
+        updated_user[Constants.INSTAGRAM_POST_LAST_N_DAYS_COUNT] = last_n_days_post_count
         updated_user[Constants.INSTAGRAM_POST_LAST_DATE] = str(last_post_date)
 
-        self.logger.debug("Instagram user '%s' processed: posts total %d, last month %d, last date %s",
+        self.logger.debug("Instagram user '%s' processed: posts total %d, last %d days %d, last date %s",
                           user_name,
                           updated_user[Constants.INSTAGRAM_POST_COUNT],
-                          updated_user[Constants.INSTAGRAM_POST_LAST_MONTH_COUNT],
+                          Constants.INSTAGRAM_LAST_N_DAYS,
+                          updated_user[Constants.INSTAGRAM_POST_LAST_N_DAYS_COUNT],
                           updated_user[Constants.INSTAGRAM_POST_LAST_DATE])
         return updated_user
 
