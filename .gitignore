@@ -8,3 +8,4 @@ statsbot/__pycache__/**
 dist/**
 token.json
 credentials.json
+credentials/**

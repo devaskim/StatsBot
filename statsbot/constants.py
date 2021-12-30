@@ -1,3 +1,5 @@
+import logging
+
 class Constants:
     SITE_TAG = "site"
     SITE_YEAR_TAG = "site_year"
@@ -16,6 +18,20 @@ class Constants:
     CONFIG_SPREADSHEET_RANGE = "spreadsheet_range"
 
     LOGGER_NAME = "StatsBot"
+    LOG_LEVEL = logging.DEBUG
+    LOGS_DIRECTORY = "logs"
+    LOG_FILE = "app.log"
+    LOG_MAX_FILE_SIZE = 5 * 1024 * 1024
+    LOG_MAX_FILE_COUNT = 5
+
+    CONFIG_FILE = "config.txt"
+
+    CREDENTIALS_DIR = "credentials"
+    CREDENTIALS_FILE = "credentials.json"
+    TOKEN_FILE = "token.json"
+
+    # If modifying these scopes, delete the file token.json.
+    SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 
 

@@ -22,7 +22,8 @@ class StatsBot:
         updated_users = []
         for user in users:
             for extractor in self.extractors:
-                user = {**user, **extractor.get_stats(user)}
+                if extractor.is_working():
+                    user = {**user, **extractor.get_stats(user)}
             updated_users.append(user)
         self.last_run_timestamp = datetime.now()
         self.logger.info("Finished collecting stats at %s", self.last_run_timestamp)

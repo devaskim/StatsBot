@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import os.path
 import logging
-import sys
 import os
 from logging.handlers import RotatingFileHandler
 
@@ -15,51 +14,41 @@ from googleapiclient.errors import HttpError
 from statsbot.constants import Constants
 from statsbot.stats_bot import StatsBot
 
-# If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-
-LOG_LEVEL = logging.DEBUG
-LOGS_DIRECTORY = "logs"
-LOG_FILE = "app.log"
-LOG_MAX_FILE_SIZE = 5 * 1024 * 1024
-LOG_MAX_FILE_COUNT = 5
-
-CONFIG_FILE = "config.txt"
-CREDENTIALS_FILE = "credentials.json"
-TOKEN_FILE = "token.json"
-
 
 def init_logging():
-    if not os.path.exists(LOGS_DIRECTORY):
-        os.makedirs(LOGS_DIRECTORY)
+    if not os.path.exists(Constants.LOGS_DIRECTORY):
+        os.makedirs(Constants.LOGS_DIRECTORY)
 
     logger = logging.getLogger(Constants.LOGGER_NAME)
-    logger.setLevel(LOG_LEVEL)
-    handler = RotatingFileHandler(os.path.join(LOGS_DIRECTORY, LOG_FILE),
-                                  maxBytes=LOG_MAX_FILE_SIZE,
-                                  backupCount=LOG_MAX_FILE_COUNT)
+    logger.setLevel(Constants.LOG_LEVEL)
+    handler = RotatingFileHandler(os.path.join(Constants.LOGS_DIRECTORY, Constants.LOG_FILE),
+                                  maxBytes=Constants.LOG_MAX_FILE_SIZE,
+                                  backupCount=Constants.LOG_MAX_FILE_COUNT)
     handler.setFormatter(logging.Formatter(f"[%(asctime)s] [%(levelname)s] - %(message)s"))
-    handler.setLevel(LOG_LEVEL)
+    handler.setLevel(Constants.LOG_LEVEL)
     logger.addHandler(handler)
 
 
 def main():
     logger = logging.getLogger(Constants.LOGGER_NAME)
 
+    if not os.path.exists(Constants.CREDENTIALS_DIR):
+        os.makedirs(Constants.CREDENTIALS_DIR)
+
     creds = None
-    if os.path.exists(TOKEN_FILE):
-        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+    if os.path.exists(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE)):
+        creds = Credentials.from_authorized_user_file(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE), Constants.SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(os.path.join(Constants.CREDENTIALS_DIR, Constants.CREDENTIALS_FILE), SCOPES)
             creds = flow.run_local_server(port=0)
-        with open(TOKEN_FILE, 'w') as token:
+        with open(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE), 'w') as token:
             token.write(creds.to_json())
 
     app_config = {}
-    with open(CONFIG_FILE) as file:
+    with open(Constants.CONFIG_FILE) as file:
         for line in file:
             name, value = line.partition("=")[::2]
             app_config[name.strip().lower()] = value.strip()

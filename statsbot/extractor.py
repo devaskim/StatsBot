@@ -6,3 +6,7 @@ class Extractor(ABC):
     @abstractmethod
     def get_stats(self, user):
         pass
+
+    @abstractmethod
+    def is_working(self):
+        pass
