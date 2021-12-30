@@ -28,13 +28,18 @@ class InstagramExtractor(Extractor):
                              self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT])
 
     def get_stats(self, user):
+        updated_user = {}
         try:
-            return self.get_post_stats(user)
+            updated_user = self.get_post_stats(user)
         except Exception as e:
             self.logger.warning("Failed to collect stats for Instagram user '%s'",
                                 self._extract_username(user[Constants.INSTAGRAM_PAGE]))
             self.logger.warning(e)
-        return {}
+        if user.get(Constants.INSTAGRAM_PAGE, "") and self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT] > 0:
+            self.logger.debug("Waiting for %d seconds before processing next Instagram user",
+                              self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT])
+            time.sleep(self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT])
+        return updated_user
 
     def get_post_stats(self, user):
         updated_user = {}
@@ -110,10 +115,6 @@ class InstagramExtractor(Extractor):
                           updated_user[Constants.INSTAGRAM_POST_COUNT],
                           updated_user[Constants.INSTAGRAM_POST_LAST_MONTH_COUNT],
                           updated_user[Constants.INSTAGRAM_POST_LAST_DATE])
-        if self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT] > 0:
-            self.logger.debug("Waiting for %d seconds before processing next Instagram user",
-                              self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT])
-            time.sleep(self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT])
         return updated_user
 
     def _extract_username(self, username_in_page):
