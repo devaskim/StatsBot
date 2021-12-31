@@ -27,7 +27,7 @@ class StatsBot:
             updated_users.append(user)
         self.last_run_timestamp = datetime.now()
         self.logger.info("Finished collecting stats at %s", self.last_run_timestamp)
-        return updated_users
+        return updated_users, self.last_run_timestamp
 
     def get_stats(self):
         self.logger.info("Returning stats collected at %s", self.last_run_timestamp)

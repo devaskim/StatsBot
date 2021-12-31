@@ -3,6 +3,7 @@ from __future__ import print_function
 import os.path
 import logging
 import os
+from datetime import datetime
 from logging.handlers import RotatingFileHandler
 
 from google.auth.transport.requests import Request
@@ -37,12 +38,14 @@ def main():
 
     creds = None
     if os.path.exists(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE)):
-        creds = Credentials.from_authorized_user_file(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE), Constants.SCOPES)
+        creds = Credentials.from_authorized_user_file(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE),
+                                                      Constants.SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(os.path.join(Constants.CREDENTIALS_DIR, Constants.CREDENTIALS_FILE), SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(
+                os.path.join(Constants.CREDENTIALS_DIR, Constants.CREDENTIALS_FILE), SCOPES)
             creds = flow.run_local_server(port=0)
         with open(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE), 'w') as token:
             token.write(creds.to_json())
@@ -57,9 +60,9 @@ def main():
     try:
         service = build('sheets', 'v4', credentials=creds)
 
-        sheet = service.spreadsheets()
-        result = sheet.values().get(spreadsheetId=app_config[Constants.CONFIG_SPREADSHEET_ID],
-                                    range=app_config[Constants.CONFIG_SPREADSHEET_RANGE]).execute()
+        spreadsheets = service.spreadsheets()
+        result = spreadsheets.values().get(spreadsheetId=app_config[Constants.CONFIG_SPREADSHEET_ID],
+                                           range=app_config[Constants.CONFIG_SPREADSHEET_RANGE]).execute()
         values = result.get('values', [])
 
         if not values:
@@ -86,7 +89,7 @@ def main():
                 users.append(user)
 
         logger.info("%d user(s) will be processed", len(users))
-        updated_users = stats_bot.run(users)
+        updated_users, last_run_timestamp = stats_bot.run(users)
 
         result = []
         for user in updated_users:
@@ -98,10 +101,21 @@ def main():
                            user.get(Constants.INSTAGRAM_POST_LAST_N_DAYS_COUNT, ""),
                            user.get(Constants.INSTAGRAM_POST_LAST_DATE, "")])
 
-        sheet.values().update(spreadsheetId=app_config[Constants.CONFIG_SPREADSHEET_ID],
-                              range=app_config[Constants.CONFIG_SPREADSHEET_RANGE],
-                              valueInputOption="USER_ENTERED",
-                              body={"values": result}).execute()
+        spreadsheets.values().update(spreadsheetId=app_config[Constants.CONFIG_SPREADSHEET_ID],
+                                     range=app_config[Constants.CONFIG_SPREADSHEET_RANGE],
+                                     valueInputOption="USER_ENTERED",
+                                     body={"values": result}).execute()
+
+        spreadsheets.batchUpdate(spreadsheetId=app_config[Constants.CONFIG_SPREADSHEET_ID],
+                                 body={"requests": {
+                                     "updateSpreadsheetProperties": {
+                                         "properties": {
+                                             "title": str(last_run_timestamp.strftime("%Y-%m-%d %H:%M:%S"))
+                                         },
+                                         "fields": "title"
+                                     }
+                                 }}).execute()
+
     except HttpError as err:
         logger.error("Failed to export data from Google Sheet")
         logger.error(err)
