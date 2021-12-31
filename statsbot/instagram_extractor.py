@@ -93,7 +93,7 @@ class InstagramExtractor(Extractor):
         else:
             last_post_date = datetime.datetime.strptime("2000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
 
-        if total_post_count == 0:
+        if is_first_time:
             single_request_post_count = Constants.INSTAGRAM_SINGLE_REQUEST_MAX_POST_COUNT
         else:
             single_request_post_count = Constants.INSTAGRAM_SINGLE_REQUEST_POST_COUNT
@@ -114,12 +114,12 @@ class InstagramExtractor(Extractor):
                 post_naive_date = post.taken_at.replace(tzinfo=None)
                 if post_naive_date > last_post_date:
                     last_post_date = post_naive_date
+                    total_post_count += 1
+                if post_naive_date >= last_n_days:
+                    last_n_days_post_count += 1
                 elif not is_first_time:
                     end_cursor = ""
                     break
-                if post_naive_date >= last_n_days:
-                    last_n_days_post_count += 1
-                total_post_count += 1
             if not end_cursor:
                 break
 
