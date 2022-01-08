@@ -3,14 +3,11 @@ from __future__ import print_function
 import os.path
 import logging
 import os
-from datetime import datetime
 from logging.handlers import RotatingFileHandler
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+from googleapiclient.errors import Error
+from google.oauth2.service_account import Credentials
 
 from statsbot.constants import Constants
 from statsbot.stats_bot import StatsBot
@@ -36,28 +33,22 @@ def main():
     if not os.path.exists(Constants.CREDENTIALS_DIR):
         os.makedirs(Constants.CREDENTIALS_DIR)
 
-    creds = None
-    if os.path.exists(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE)):
-        creds = Credentials.from_authorized_user_file(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE),
-                                                      Constants.SCOPES)
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                os.path.join(Constants.CREDENTIALS_DIR, Constants.CREDENTIALS_FILE), SCOPES)
-            creds = flow.run_local_server(port=0)
-        with open(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE), 'w') as token:
-            token.write(creds.to_json())
-
-    app_config = {}
-    with open(Constants.CONFIG_FILE) as file:
-        for line in file:
-            name, value = line.partition("=")[::2]
-            app_config[name.strip().lower()] = value.strip()
-    stats_bot = StatsBot(app_config)
-
     try:
+        app_config = {}
+        with open(Constants.CONFIG_FILE) as file:
+            for line in file:
+                name, value = line.partition("=")[::2]
+                app_config[name.strip().lower()] = value.strip()
+        stats_bot = StatsBot(app_config)
+
+        if os.path.exists(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE)):
+            creds = Credentials.from_service_account_file(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE),
+                                                          scopes=Constants.SCOPES)
+        else:
+            logger.fatal("No Google service account in " +
+                         os.path.exists(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE)))
+            return
+
         service = build('sheets', 'v4', credentials=creds)
 
         spreadsheets = service.spreadsheets()
@@ -116,9 +107,10 @@ def main():
                                      }
                                  }}).execute()
 
-    except HttpError as err:
-        logger.error("Failed to export data from Google Sheet")
-        logger.error(err)
+    except Error as err:
+        logger.error("Google API error: " + str(err))
+    except Exception as e:
+        logger.error("Google API error: " + str(e))
 
 
 if __name__ == '__main__':
