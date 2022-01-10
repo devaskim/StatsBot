@@ -152,7 +152,7 @@ def main():
                                               body=output_data).execute()
 
         date_str = str(last_run_timestamp.strftime("%Y-%m-%d %H:%M:%S"))
-        logger.info("Updating last run timestamp in spreadsheet to %s", date_str)
+        logger.info("Last run timestamp set to %s", date_str)
         # spreadsheets.batchUpdate(spreadsheetId=app_config[Constants.CONFIG_SPREADSHEET_ID],
         #                          body={"requests": {
         #                              "updateSpreadsheetProperties": {
