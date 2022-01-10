@@ -152,16 +152,16 @@ def main():
                                               body=output_data).execute()
 
         date_str = str(last_run_timestamp.strftime("%Y-%m-%d %H:%M:%S"))
-        logger.debug("Updating last run timestamp in spreadsheet to %s", date_str)
-        spreadsheets.batchUpdate(spreadsheetId=app_config[Constants.CONFIG_SPREADSHEET_ID],
-                                 body={"requests": {
-                                     "updateSpreadsheetProperties": {
-                                         "properties": {
-                                             "title": date_str
-                                         },
-                                         "fields": "title"
-                                     }
-                                 }}).execute()
+        logger.info("Updating last run timestamp in spreadsheet to %s", date_str)
+        # spreadsheets.batchUpdate(spreadsheetId=app_config[Constants.CONFIG_SPREADSHEET_ID],
+        #                          body={"requests": {
+        #                              "updateSpreadsheetProperties": {
+        #                                  "properties": {
+        #                                      "title": date_str
+        #                                  },
+        #                                  "fields": "title"
+        #                              }
+        #                          }}).execute()
     except Exception as e:
         logger.error("Unrecoverable execution error: " + str(e))
     finally:
