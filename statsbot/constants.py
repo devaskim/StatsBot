@@ -11,11 +11,13 @@ class Constants:
 
     INSTAGRAM_PAGE = "insta_page"
     INSTAGRAM_POST_COUNT = "insta_post_count"
+    INSTAGRAM_FOLLOWERS = "insta_followers"
     INSTAGRAM_POST_LAST_N_DAYS_COUNT = "insta_30_days_count"
     INSTAGRAM_POST_LAST_DATE = "insta_last_post_date"
 
     INSTAGRAM_FILTERS = [INSTAGRAM_PAGE,
                          INSTAGRAM_POST_COUNT,
+                         INSTAGRAM_FOLLOWERS,
                          INSTAGRAM_POST_LAST_N_DAYS_COUNT,
                          INSTAGRAM_POST_LAST_DATE]
 

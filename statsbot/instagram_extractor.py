@@ -101,59 +101,46 @@ class InstagramExtractor(Extractor):
         else:
             self.logger.debug("Instagram ID for user '%s' is already known: %s", user_name, user_id)
 
-        last_n_days = datetime.datetime.now() - datetime.timedelta(days=Constants.INSTAGRAM_LAST_N_DAYS)
+        user_info = self.instagrapi.user_info(user_id)
 
         last_n_days_post_count = 0
-        total_post_count = user.get(Constants.INSTAGRAM_POST_COUNT, "")
-        total_post_count = int(total_post_count) if total_post_count else 0
-        is_first_time = total_post_count == 0
+        last_n_days = datetime.datetime.now() - datetime.timedelta(days=Constants.INSTAGRAM_LAST_N_DAYS)
+        last_post_date = datetime.datetime.strptime("2000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
 
-        last_post_date = user.get(Constants.INSTAGRAM_POST_LAST_DATE, "")
-        if last_post_date:
-            last_post_date = datetime.datetime.strptime(last_post_date, "%Y-%m-%d %H:%M:%S")
-        else:
-            last_post_date = datetime.datetime.strptime("2000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
-        previous_last_post_date = last_post_date
-
-        if is_first_time:
-            single_request_post_count = Constants.INSTAGRAM_SINGLE_REQUEST_MAX_POST_COUNT
-        else:
-            single_request_post_count = Constants.INSTAGRAM_SINGLE_REQUEST_POST_COUNT
+        is_run = True
+        if user_info.media_count == 0:
+            self.logger.debug("No posts for Instagram user '%s'", user_name)
+            last_post_date = ""
+            is_run = False
 
         end_cursor = ""
-        while True:
+        while is_run:
             posts, end_cursor = self.instagrapi.user_medias_paginated(int(user_id),
-                                                                      single_request_post_count,
+                                                                      Constants.INSTAGRAM_SINGLE_REQUEST_POST_COUNT,
                                                                       end_cursor)
             if not posts:
-                if total_post_count == 0:
-                    self.logger.debug("No posts for Instagram user '%s'", user_name)
-                    last_post_date = ""
                 break
 
             self.logger.debug("Processing %d post(s) of Instagram user '%s'", len(posts), user_name)
             for post in posts:
                 post_naive_date = post.taken_at.replace(tzinfo=None)
-                if is_first_time or post_naive_date > previous_last_post_date:
-                    total_post_count += 1
-
                 if post_naive_date > last_post_date:
                     last_post_date = post_naive_date
 
                 if post_naive_date >= last_n_days:
                     last_n_days_post_count += 1
-                elif not is_first_time:
-                    end_cursor = ""
+                else:
+                    is_run = False
                     break
-            if not end_cursor:
-                break
 
-        updated_user[Constants.INSTAGRAM_POST_COUNT] = total_post_count
+        updated_user[Constants.INSTAGRAM_POST_COUNT] = user_info.media_count
+        updated_user[Constants.INSTAGRAM_FOLLOWERS] = user_info.follower_count
         updated_user[Constants.INSTAGRAM_POST_LAST_N_DAYS_COUNT] = last_n_days_post_count
         updated_user[Constants.INSTAGRAM_POST_LAST_DATE] = str(last_post_date)
 
-        self.logger.debug("Instagram user '%s' processed: posts total %d, last %d days %d, last date %s",
+        self.logger.debug("Instagram user '%s' processed: followers %d, posts total %d, last %d days %d, last date %s",
                           user_name,
+                          updated_user[Constants.INSTAGRAM_FOLLOWERS],
                           updated_user[Constants.INSTAGRAM_POST_COUNT],
                           Constants.INSTAGRAM_LAST_N_DAYS,
                           updated_user[Constants.INSTAGRAM_POST_LAST_N_DAYS_COUNT],
