@@ -29,6 +29,10 @@ class StatsBot:
         self.logger.info("Finished collecting stats at %s", self.last_run_timestamp)
         return updated_users, self.last_run_timestamp
 
+    def stop(self):
+        for extractor in self.extractors:
+            extractor.on_stop()
+
     def get_stats(self):
         self.logger.info("Returning stats collected at %s", self.last_run_timestamp)
         return self.updated_users

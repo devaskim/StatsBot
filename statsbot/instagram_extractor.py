@@ -1,3 +1,4 @@
+import json
 import logging
 import time
 import os.path
@@ -14,6 +15,8 @@ class InstagramExtractor(Extractor):
     def __init__(self, config):
         self.logger = logging.getLogger(Constants.LOGGER_NAME)
         self.config = config
+        self.new_id_resolved = False
+        self.name_to_id = {}
         self.cred_file = os.path.join(Constants.CREDENTIALS_DIR,
                                       Constants.INSTAGRAM_USER_SESSION_FILE.format(
                                           self.config[Constants.CONFIG_INSTAGRAM_USERNAME]))
@@ -25,9 +28,11 @@ class InstagramExtractor(Extractor):
                 self.instagrapi.load_settings(self.cred_file)
             self.login_success = self.instagrapi.login(self.config[Constants.CONFIG_INSTAGRAM_USERNAME],
                                                        self.config[Constants.CONFIG_INSTAGRAM_PASSWORD])
+
+            self._load_id_file()
         except Exception as e:
             self.login_success = False
-            error_message = e.message
+            error_message = str(e)
 
         if not self.login_success:
             self.logger.error("Failed to login to Instagram: %s", error_message)
@@ -44,8 +49,23 @@ class InstagramExtractor(Extractor):
             self.logger.info("Request timeout for Instagram parser is configured to %d seconds",
                              self.config[Constants.CONFIG_INSTAGRAM_SLEEP_TIMEOUT])
 
+    def _load_id_file(self):
+        self.name_to_id = {}
+        if os.path.exists(os.path.join(Constants.CREDENTIALS_DIR, Constants.INSTAGRAM_ID_FILE)):
+            with open(os.path.join(Constants.CREDENTIALS_DIR, Constants.INSTAGRAM_ID_FILE), 'r') as f:
+                self.name_to_id = json.load(f)
+
+    def _store_id_file(self):
+        if self.new_id_resolved:
+            with open(os.path.join(Constants.CREDENTIALS_DIR, Constants.INSTAGRAM_ID_FILE), 'w', encoding='utf-8') as f:
+                json.dump(self.name_to_id, f, ensure_ascii=False, indent=4)
+            self.new_id_resolved = False
+
     def is_working(self):
         return self.login_success
+
+    def on_stop(self):
+        self._store_id_file()
 
     def get_stats(self, user):
         updated_user = {}
@@ -72,10 +92,11 @@ class InstagramExtractor(Extractor):
         if not user.get(Constants.INSTAGRAM_PAGE, ""):
             return updated_user
         user_name = self._extract_username(user[Constants.INSTAGRAM_PAGE])
-        user_id = user.get(Constants.INSTAGRAM_USER_ID, "")
+        user_id = self.name_to_id.get(user_name, "")
         if not user_id:
             user_id = self.instagrapi.user_id_from_username(user_name)
-            updated_user[Constants.INSTAGRAM_USER_ID] = user_id
+            self.name_to_id[user_name] = user_id
+            self.new_id_resolved = True
             self.logger.debug("Instagram ID for user '%s' is resolved to %s", user_name, user_id)
         else:
             self.logger.debug("Instagram ID for user '%s' is already known: %s", user_name, user_id)

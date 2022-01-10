@@ -39,11 +39,16 @@ class WhoIsExtractor(Extractor):
     def is_working(self):
         return True
 
+    def on_stop(self):
+        pass
+
     def get_stats(self, user):
         updated_user = {}
         if not user.get(Constants.SITE_TAG):
             return updated_user
         if user.get(Constants.SITE_YEAR_TAG) and int(user[Constants.SITE_YEAR_TAG]) != WhoIsExtractor.UNKNOWN_YEAR:
+            self.logger.debug("Domain creation year for url `%s` is already known: %s",
+                              user.get(Constants.SITE_TAG), user.get(Constants.SITE_YEAR_TAG))
             return updated_user
         domain = self._extract_domain(user[Constants.SITE_TAG])
         year = self.get_creation_year(domain)
@@ -51,7 +56,7 @@ class WhoIsExtractor(Extractor):
             subdomain_pos = domain.find(".")
             if subdomain_pos > 0 and domain.find(".", subdomain_pos + 1) > 0:
                 domain = domain[subdomain_pos + 1:]
-                self.logger.debug("Subdomain creation year unknown. Going to resolve it for domain %s", domain)
+                self.logger.debug("Subdomain creation year unknown. Going to resolve year for domain %s", domain)
                 year = self.get_creation_year(domain)
         updated_user[Constants.SITE_YEAR_TAG] = year
         return updated_user
@@ -84,7 +89,7 @@ class WhoIsExtractor(Extractor):
                     match = re.search(self.YEAR_REGEXP, test_string)
                     if match:
                         year = int(match[1])
-                        self.logger.debug("Resolve %d year for %s domain", year, domain)
+                        self.logger.debug("Resolve creation year to %d for %s domain", year, domain)
                         return year
 
                 search_tag_position = response.text.find(self.CREATION_DATE_SEARCH_TAG,
