@@ -84,7 +84,7 @@ def main():
 
         if os.path.exists(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE)):
             creds = Credentials.from_service_account_file(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE),
-                                                          scopes=Constants.SCOPES)
+                                                          scopes=Constants.SPREADSHEET_SCOPES)
         else:
             logger.fatal("No Google service account in %s",
                          os.path.exists(os.path.join(Constants.CREDENTIALS_DIR, Constants.TOKEN_FILE)))
@@ -100,9 +100,10 @@ def main():
 
             instagram_mapping = filter_sheet(sheet_name, sheet_heading, Constants.INSTAGRAM_FILTERS)
             whois_mapping = filter_sheet(sheet_name, sheet_heading, Constants.WHOIS_FILTERS)
+            youtube_mapping = filter_sheet(sheet_name, sheet_heading, Constants.YOUTUBE_FILTERS)
 
-            mapping = {"ranges": instagram_mapping["ranges"] + whois_mapping["ranges"],
-                       "keys": instagram_mapping["keys"] + whois_mapping["keys"]}
+            mapping = {"ranges": instagram_mapping["ranges"] + whois_mapping["ranges"] + youtube_mapping["ranges"],
+                       "keys": instagram_mapping["keys"] + whois_mapping["keys"] + youtube_mapping["keys"]}
             if not mapping["ranges"]:
                 logger.debug("No mapped columns in sheet %s", sheet_name)
                 continue

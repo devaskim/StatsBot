@@ -104,7 +104,7 @@ class InstagramExtractor(Extractor):
         user_info = self.instagrapi.user_info(user_id)
 
         last_n_days_post_count = 0
-        last_n_days = datetime.datetime.now() - datetime.timedelta(days=Constants.INSTAGRAM_LAST_N_DAYS)
+        last_n_days = datetime.datetime.now() - datetime.timedelta(days=Constants.LAST_N_DAYS)
         last_post_date = datetime.datetime.strptime("2000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
 
         is_run = True
@@ -116,7 +116,7 @@ class InstagramExtractor(Extractor):
         end_cursor = ""
         while is_run:
             posts, end_cursor = self.instagrapi.user_medias_paginated(int(user_id),
-                                                                      Constants.INSTAGRAM_SINGLE_REQUEST_POST_COUNT,
+                                                                      Constants.SINGLE_REQUEST_POST_COUNT,
                                                                       end_cursor)
             if not posts:
                 break
@@ -142,7 +142,7 @@ class InstagramExtractor(Extractor):
                           user_name,
                           updated_user[Constants.INSTAGRAM_FOLLOWERS],
                           updated_user[Constants.INSTAGRAM_POST_COUNT],
-                          Constants.INSTAGRAM_LAST_N_DAYS,
+                          Constants.LAST_N_DAYS,
                           updated_user[Constants.INSTAGRAM_POST_LAST_N_DAYS_COUNT],
                           updated_user[Constants.INSTAGRAM_POST_LAST_DATE])
         return updated_user

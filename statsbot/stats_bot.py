@@ -4,6 +4,7 @@ import logging
 from statsbot.constants import Constants
 from statsbot.who_is_extractor import WhoIsExtractor
 from statsbot.instagram_extractor import InstagramExtractor
+from statsbot.youtube_extractor import YoutubeExtractor
 
 
 class StatsBot:
@@ -11,7 +12,9 @@ class StatsBot:
     def __init__(self, config):
         self.logger = logging.getLogger(Constants.LOGGER_NAME)
         self.config = config
-        self.extractors = [WhoIsExtractor(), InstagramExtractor(self.config)]
+        self.extractors = [WhoIsExtractor(),
+                           InstagramExtractor(self.config),
+                           YoutubeExtractor(self.config)]
         self.updated_users = []
         self.last_run_timestamp = None
 

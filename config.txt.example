@@ -2,3 +2,4 @@ INSTAGRAM_USERNAME=test_user_name
 INSTAGRAM_PASSWORD=test_password
 INSTAGRAM_SLEEP_TIMEOUT=0
 SPREADSHEET_ID=test_spreadsheet_id
+YOUTUBE_TOKEN=google_app_key

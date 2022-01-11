@@ -2,7 +2,6 @@ import logging
 
 
 class Constants:
-
     SITE_TAG = "site"
     SITE_YEAR_TAG = "site_year"
 
@@ -21,6 +20,18 @@ class Constants:
                          INSTAGRAM_POST_LAST_N_DAYS_COUNT,
                          INSTAGRAM_POST_LAST_DATE]
 
+    YOUTUBE_PAGE = "youtube_page"
+    YOUTUBE_POST_COUNT = "youtube_video_count"
+    YOUTUBE_FOLLOWERS = "youtube_followers"
+    YOUTUBE_POST_LAST_N_DAYS_COUNT = "youtube_30_days_count"
+    YOUTUBE_POST_LAST_DATE = "youtube_last_video_date"
+
+    YOUTUBE_FILTERS = [YOUTUBE_PAGE,
+                       YOUTUBE_POST_COUNT,
+                       YOUTUBE_FOLLOWERS,
+                       YOUTUBE_POST_LAST_N_DAYS_COUNT,
+                       YOUTUBE_POST_LAST_DATE]
+
     LOG_LEVEL = logging.DEBUG
     LOG_MAX_FILE_SIZE = 5 * 1024 * 1024
     LOG_MAX_FILE_COUNT = 5
@@ -28,7 +39,7 @@ class Constants:
     LOG_FILE = "app.log"
     LOGGER_NAME = "StatsBot"
 
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+    SPREADSHEET_SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
     CONFIG_FILE = "config.txt"
     CREDENTIALS_DIR = "credentials"
@@ -39,14 +50,11 @@ class Constants:
     CONFIG_INSTAGRAM_PASSWORD = "instagram_password"
     CONFIG_INSTAGRAM_SLEEP_TIMEOUT = "instagram_sleep_timeout"
     CONFIG_SPREADSHEET_ID = "spreadsheet_id"
+    CONFIG_YOUTUBE_TOKEN = "youtube_token"
 
     INSTAGRAM_USER_SESSION_FILE = "instagram_{0}.json"
     INSTAGRAM_ID_FILE = "instagram_user_to_id.json"
 
-    INSTAGRAM_LAST_N_DAYS = 30
-    INSTAGRAM_SINGLE_REQUEST_POST_COUNT = INSTAGRAM_LAST_N_DAYS
-    INSTAGRAM_SINGLE_REQUEST_MAX_POST_COUNT = 50
-
-
-
+    LAST_N_DAYS = 30
+    SINGLE_REQUEST_POST_COUNT = LAST_N_DAYS
 
