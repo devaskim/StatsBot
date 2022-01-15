@@ -1,5 +1,9 @@
 INSTAGRAM_USERNAME=test_user_name
 INSTAGRAM_PASSWORD=test_password
 INSTAGRAM_SLEEP_TIMEOUT=0
-SPREADSHEET_ID=test_spreadsheet_id
+FACEBOOK_USERNAME=test_user_name
+FACEBOOK_PASSWORD=test_password
 YOUTUBE_TOKEN=google_app_key
+RUN_IN_PARALLEL=1
+THREADPOOL_SIZE=5
+SPREADSHEET_ID=test_spreadsheet_id

@@ -36,12 +36,6 @@ class WhoIsExtractor(Extractor):
     def __init__(self):
         self.logger = logging.getLogger(Constants.LOGGER_NAME)
 
-    def is_working(self):
-        return True
-
-    def on_stop(self):
-        pass
-
     def get_stats(self, user):
         updated_user = {}
         if not user.get(Constants.SITE_TAG):

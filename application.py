@@ -3,6 +3,7 @@ from __future__ import print_function
 import os.path
 import logging
 import os
+import sys
 from logging.handlers import RotatingFileHandler
 
 from googleapiclient.discovery import build
@@ -16,14 +17,20 @@ def init_logging():
     if not os.path.exists(Constants.LOGS_DIRECTORY):
         os.makedirs(Constants.LOGS_DIRECTORY)
 
-    handler = RotatingFileHandler(os.path.join(Constants.LOGS_DIRECTORY, Constants.LOG_FILE),
-                                  maxBytes=Constants.LOG_MAX_FILE_SIZE,
-                                  backupCount=Constants.LOG_MAX_FILE_COUNT)
-    handler.setFormatter(logging.Formatter(f"[%(asctime)s] [%(levelname)s] - %(message)s"))
-
     logger = logging.getLogger(Constants.LOGGER_NAME)
-    logger.addHandler(handler)
     logger.setLevel(Constants.LOG_LEVEL)
+    formatter = logging.Formatter(Constants.LOG_FORMAT)
+
+    if os.environ.get('APP_TEST_MODE', "") == "on":
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
+    file_handler = RotatingFileHandler(os.path.join(Constants.LOGS_DIRECTORY, Constants.LOG_FILE),
+                                       maxBytes=Constants.LOG_MAX_FILE_SIZE,
+                                       backupCount=Constants.LOG_MAX_FILE_COUNT)
+    file_handler.setFormatter(logging.Formatter(Constants.LOG_FORMAT))
+    logger.addHandler(file_handler)
 
 
 def get_sheet_names(spreadsheet_service, spreadsheet_id):
@@ -101,9 +108,16 @@ def main():
             instagram_mapping = filter_sheet(sheet_name, sheet_heading, Constants.INSTAGRAM_FILTERS)
             whois_mapping = filter_sheet(sheet_name, sheet_heading, Constants.WHOIS_FILTERS)
             youtube_mapping = filter_sheet(sheet_name, sheet_heading, Constants.YOUTUBE_FILTERS)
+            facebook_mapping = filter_sheet(sheet_name, sheet_heading, Constants.FACEBOOK_FILTERS)
 
-            mapping = {"ranges": instagram_mapping["ranges"] + whois_mapping["ranges"] + youtube_mapping["ranges"],
-                       "keys": instagram_mapping["keys"] + whois_mapping["keys"] + youtube_mapping["keys"]}
+            mapping = {"ranges": instagram_mapping["ranges"] +
+                                 whois_mapping["ranges"] +
+                                 youtube_mapping["ranges"] +
+                                 facebook_mapping["ranges"],
+                       "keys": instagram_mapping["keys"] +
+                               whois_mapping["keys"] +
+                               youtube_mapping["keys"] +
+                               facebook_mapping["keys"]}
             if not mapping["ranges"]:
                 logger.debug("No mapped columns in sheet %s", sheet_name)
                 continue

@@ -7,10 +7,8 @@ class Extractor(ABC):
     def get_stats(self, user):
         pass
 
-    @abstractmethod
     def is_working(self):
-        pass
+        return True
 
-    @abstractmethod
     def on_stop(self):
         pass
